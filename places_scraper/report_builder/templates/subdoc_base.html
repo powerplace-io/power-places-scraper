@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<section class="section">
+  <div class="container">
+    <nav class="breadcrumb" aria-label="breadcrumbs">
+      <ul>
+        {% for name, url in breadcrumbs %}
+          {% if url != '#' %}
+            <li><a href="{{ url }}">{{ name }}</a></li>
+          {% else %}
+            <li class="is-active"><a href="#" aria-current="page">{{ name }}</a></li>
+          {% endif %}
+        {% endfor %}
+      </ul>
+    </nav>
+  </div>
+</section>
+
+{% block subdoc_content %}
+{% endblock %}
+
+{% endblock %}

@@ -1,0 +1,52 @@
+{% extends 'subdoc_base.html' %}
+
+{% block subdoc_content %}
+<section class="section">
+  <div class="container">
+    <h1 class="title">{{ title }}</h1>
+    <h2 class="subtitle">Subdocuments</h1>
+    <table class="table">
+    {% for subdoc_title, subdoc_url in subdocuments.items() %}
+        <tr>
+          <td><a href="{{subdoc_url}}">{{subdoc_title}}</a></td>
+        </tr>
+    {% endfor %}
+    </table>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <h2 class="subtitle">Overview</h1>
+    <table class="table">
+    {% for key, value in dataset_overview.items() %}
+        <tr>
+          <th>{{ key }}</th>
+          <td>{{ value }}</td>
+        </tr>
+    {% endfor %}
+    </table>
+  </div>
+</section>
+
+{% if map_url %}
+<section class="section">
+  <div class="container">
+    <h2 class="subtitle">Map</h2>
+    <img src="{{ map_url }}" />
+  </div>
+</section>
+{% endif %}
+
+{% if distances_url %}
+<section class="section">
+  <div class="container">
+    <h2 class="subtitle">Distances between osm places and their google search result</h2>
+    <img src="{{ distances_url }}" />
+    <p>Places with a distances larger than 1km are not displayed in this plot.</p>
+  </div>
+</section>
+{% endif %}
+
+
+{% endblock %}
