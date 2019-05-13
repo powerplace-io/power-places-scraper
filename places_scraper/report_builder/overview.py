@@ -48,7 +48,7 @@ class OverviewReport(BaseReport):
                     num_gpt_places='',
                 ))
 
-        self.apply_template("index", dict(datasets=toc))
+        self.apply_template("index", dict(datasets=toc, title="dateset index"))
 
     def build(self, areas):
         if len(areas) == 0:
