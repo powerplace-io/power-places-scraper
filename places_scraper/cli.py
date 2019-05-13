@@ -64,3 +64,6 @@ class PlacesScraperCLI(object):
     def build_report(self, areas):
         print("Building report for {} areas.".format(len(areas) if len(areas) > 0 else "all"))
         build_report(areas)
+
+def main():
+    return PlacesScraperCLI()
