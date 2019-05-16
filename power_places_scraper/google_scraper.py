@@ -272,7 +272,7 @@ def run(places):
 
     num_places_with_gpt = 0
 
-    with tqdm(pool.imap_unordered(get_google_info, places),
+    with tqdm(pool.imap_unordered(get_google_info, places), unit="places",
               total=len(places)) as bar:
         for place in bar:
             if not place:

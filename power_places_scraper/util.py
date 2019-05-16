@@ -1,4 +1,4 @@
-"""Utility functions for the power places scraper."""
+"""Utility functions for the power places scraper cli."""
 
 import socks
 import socket
@@ -11,12 +11,7 @@ import urllib.request
 import ssl
 
 
-RELVANT_OSM_TAGS_FILE = os.path.join(os.path.dirname(__file__),
-                                      "relevant_osm_types.yl")
-
 TIME_F_STR = "%Y-%m-%d %H:%M:%S"
-
-yaml = YAML()
 
 
 def current_time_str():
@@ -75,9 +70,3 @@ def load_bounding_box(path):
             west -= 360
 
         return ((south, west), (north, east))
-
-
-def get_relevant_osm_tags():
-    """Get the tag information the overpass api shall be queried with."""
-    with open(RELVANT_OSM_TAGS_FILE, "r") as f:
-        return json.load(f)

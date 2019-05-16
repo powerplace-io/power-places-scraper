@@ -1,17 +1,23 @@
 """Functions for querying the Overpass API."""
 
-from power_places_scraper.util import get_relevant_osm_types
 from tqdm import tqdm
 import overpy
 from time import sleep
+import os
+import json
+
+
+RELVANT_OSM_TAGS_PATH = os.path.join(os.path.dirname(__file__),
+                                     "relevant_osm_tags.json")
 
 
 class OsmScraper:
     """Functionality for querying the Overpass API."""
 
-    def __init__(self, num_lat=5, num_lng=5, accept_all=True):
+    def __init__(self, num_lat=5, num_lng=5, accept_all=False,
+                 relevant_osm_tags_path=RELVANT_OSM_TAGS_PATH):
         """Initialize the scraper."""
-        self.types = get_relevant_osm_tags()
+        self.init_relevant_osm_tags(relevant_osm_tags_path)
         self.places = dict()
         self.dropped_places = 0
         self.num_lat = num_lat
@@ -19,6 +25,11 @@ class OsmScraper:
 
         # Whether to accept all elements or only those with an complete address
         self.accept_all = accept_all
+
+    def init_relevant_osm_tags(self, relevant_osm_tags_path):
+        """Get the tag information the overpass api shall be queried with."""
+        with open(relevant_osm_tags_path, "r") as f:
+            self.relevant_tags = json.load(f)
 
     def build_query(self, bbox):
         """Build an Overpass QL query for a given bounding box."""
@@ -29,7 +40,7 @@ class OsmScraper:
         node[{selector}]({bbox});"""
 
         entries = list()
-        for key, values in self.types.items():
+        for key, values in self.relevant_tags.items():
             if values is None:
                 entries.append(node_way_pair_schema.format(
                     bbox=bbox, selector='"{}"'.format(key)))
@@ -61,7 +72,7 @@ class OsmScraper:
     def run(self, bounding_box):
         """Run scraper for a given bounding_box."""
         api = overpy.Overpass()
-        with tqdm(self.sub_areas(bounding_box),
+        with tqdm(self.sub_areas(bounding_box), unit="sub areas",
                   total=self.num_lat*self.num_lng) as boxes:
             for bb in boxes:
                 query = self.build_query(bb)
