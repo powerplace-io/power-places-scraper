@@ -1,44 +1,53 @@
+"""Utility functions for the power places scraper."""
+
 import socks
 import socket
 
 from ruamel.yaml import YAML
 import geojson
 
+import datetime
+import os
+import urllib.request
+import ssl
 
-RELVANT_OSM_TYPES_FILE = os.path.join(os.path.dirname(__file__), "relevant_osm_types.yl")
+
+RELVANT_OSM_TYPES_FILE = os.path.join(os.path.dirname(__file__),
+                                      "relevant_osm_types.yl")
 
 TIME_F_STR = "%Y-%m-%d %H:%M:%S"
 
 yaml = YAML()
 
+
 def current_time_str():
+    """Return current date and time as str."""
     return datetime.datetime.now().strftime(TIME_F_STR)
 
 
 def init_proxy(host="localhost", port=9150):
-    if host is None or port is None:
-        return
-
-    default_proxy, socket_class = socks.get_default_proxy(), socket.socket
-
-    socks.set_default_proxy(socks.SOCKS5, proxy_host, proxy_port)
+    """Init default proxy."""
+    socks.set_default_proxy(socks.SOCKS5, host, port)
     socket.socket = socks.socksocket
 
+
 def test_connection(test_url="https://google.com"):
-    # test whether connection is working
+    """Test whether connection is working (relevant when using a proxy)."""
     try:
-        resp = urllib.request.urlopen(
+        urllib.request.urlopen(
             urllib.request.Request(url=test_url, data=None),
             context=ssl.SSLContext(ssl.PROTOCOL_TLSv1))
         return True
-    except IOError as e:
+    except IOError:
         print ("IO Error. This probably means that the onion router is not"
                "running or is configured wrong.")
         return False
 
+
 def load_bounding_box(path):
-    with open(fn, 'r') as f:
-        geo_json = geojson.load(f)
+    """Get a boundin box from a geojson file."""
+    with open(path, 'r') as f:
+        geo_json = geojson.loads(f)
 
         for k in ("features", 0, "geometry", "coordinates", 0):
             try:
@@ -68,6 +77,8 @@ def load_bounding_box(path):
 
         return ((south, west), (north, east))
 
+
 def get_relevant_osm_types():
+    """Get the tag information the overpass api shall be queried with."""
     with open(RELVANT_OSM_TYPES_FILE, "r") as f:
         return yaml.load(f)

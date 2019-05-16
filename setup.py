@@ -7,7 +7,7 @@ with open('README.md') as f:
 
 setup(
     # Application name:
-    name="Places Scraper",
+    name="Power Places Scraper",
 
     # Version number (initial):
     version="0.1.0",
@@ -17,7 +17,7 @@ setup(
     author_email="developers@powerplace.io",
 
     # Packages
-    packages=["places_scraper"],
+    packages=["power_places_scraper"],
 
     # Include additional files into the package
     include_package_data=True,
@@ -30,13 +30,12 @@ setup(
     long_description=long_description,
     long_description_content_type='text/markdown',
 
-    entry_points = {
-        'console_scripts': ['places_scraper=places_scraper.cli:main'],
+    entry_points={
+        'console_scripts': ['power_places_scraper=power_places_scraper.cli:main'],
     },
 
     # Dependent packages (distributions)
     install_requires=[
-        "pyproj", "geojson", "Jinja2", "matplotlib", "numpy", "overpy",
-        "pandas", "PySocks", "ruamel.yaml", "seaborn", "tqdm"
+        "pyproj", "geojson", "overpy", "PySocks", "ruamel.yaml", "tqdm"
     ],
 )

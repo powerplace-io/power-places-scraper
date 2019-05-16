@@ -1,18 +1,27 @@
-from places_scraper.util import get_relevant_osm_types, current_time_str
+"""Functions for querying the Overpass API."""
+
+from places_scraper.util import get_relevant_osm_types
 from tqdm import tqdm
 import overpy
 from time import sleep
 
-class OsmScraper:
-    num_lat = 5
-    num_lng = 5
 
-    def __init__(self):
+class OsmScraper:
+    """Functionality for querying the Overpass API."""
+
+    def __init__(self, num_lat=5, num_lng=5, accept_all=True):
+        """Initialize the scraper."""
         self.types = get_relevant_osm_types()
         self.places = dict()
         self.num_places_without_address = 0
+        self.num_lat = num_lat
+        self.num_lng = num_lng
+
+        # Whether to accept all elements or only those with an complete address
+        self.accept_all = accept_all
 
     def build_query(self, bbox):
+        """Build an Overpass QL query for a given bounding box."""
         bbox = ",".join([str(cc) for c in bbox for cc in c])
 
         node_way_pair_schema = """
@@ -26,11 +35,16 @@ class OsmScraper:
                     selector = '"{}"'.format(key)
                 else:
                     selector = '"{}"="{}"'.format(key, value)
-                entries.append(node_way_pair_schema.format(bbox=bbox, selector=selector))
+                entries.append(node_way_pair_schema.format(
+                    bbox=bbox, selector=selector))
 
         return "(\n{}\n);\nout center;".format("\n".join(entries))
 
     def sub_areas(self, bounding_box):
+        """Return sub areas of bounding box.
+
+        The area is split up according to num_lat and num_lng.
+        """
         (min_lat, min_lng), (max_lat, max_lng) = bounding_box
 
         d_lat = (max_lat - min_lat) / self.num_lat
@@ -44,6 +58,7 @@ class OsmScraper:
                 )
 
     def run(self, bounding_box):
+        """Run scraper for a given bounding_box."""
         api = overpy.Overpass()
         with tqdm(self.sub_areas(bounding_box),
                   total=self.num_lat*self.num_lng) as boxes:
@@ -67,8 +82,8 @@ class OsmScraper:
 
         return list(self.places.values())
 
-
     def handle_response(self, result):
+        """Handle the response (for a queried subarea)."""
         for way in result.ways:
             if way.center_lat is None or way.center_lon is None:
                 print ("WARNING: Way without coords...")
@@ -78,6 +93,7 @@ class OsmScraper:
             self.handle_element("node", node)
 
     def element_contains_address(self, element):
+        """Return if an element contains a complete address."""
         return (
             all([
                 tag_name in element.tags
@@ -96,7 +112,15 @@ class OsmScraper:
                 ]
             ]))
 
+    def element_accepted(self, element):
+        """Whether to accept a given element."""
+        if self.accept_all:
+            return True
+        else:
+            return self.element_contains_address(element)
+
     def handle_element(self, element_type, element):
+        """Handle an observed element."""
         if element_type == "way":
             lat, lng = element.center_lat, element.center_lon
         else:
@@ -106,17 +130,17 @@ class OsmScraper:
 
         element_id = "{}/{}".format(element_type, element.id)
 
-        if self.element_contains_address(element) and not element_id in self.places:
-            place = self.places[element_id] = {
+        if self.element_accepted(element) and element_id not in self.places:
+            self.places[element_id] = {
                 "lat": lat,
                 "lng": lng,
                 "id": element_id,
                 "tags": element.tags,
             }
-
         else:
             self.num_places_without_address += 1
 
 
-def run(bounding_box):
-    return OsmScraper().run(bounding_box)
+def run(bounding_box, **args):
+    """Run OSM crawler for given bounding box in the given number of steps."""
+    return OsmScraper(**args).run(bounding_box)

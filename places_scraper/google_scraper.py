@@ -1,5 +1,6 @@
-"""This module provides functionality for getting information from the google
-search. The core of this module is derived from the populartimes scraper:
+"""Functionality for getting information from the google search.
+
+The core of this module is derived from the populartimes scraper:
 https://github.com/m-wrzr/populartimes
 """
 
@@ -16,9 +17,6 @@ from time import sleep
 
 from multiprocessing import Pool
 from tqdm import tqdm
-
-from geopy.distance import distance as geo_distance
-
 
 # user agent for populartimes request
 USER_AGENT = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_1) "
@@ -238,18 +236,10 @@ def get_google_info(place):
 
     any_info = any(result.values())
 
-    distance = None
-
-    if lat is not None and lng is not None:
-        distance = geo_distance(
-            (place['lat'], place['lng']), (lat, lng)).meters
-        result['position'] = {'lat': lat, 'lng': lng}
+    result['position'] = {'lat': lat, 'lng': lng}
 
     # Add information about the search
     result['search_info'] = dict(
-        # Distance between place usded for search query and result of search
-        distance_between_places=distance,
-
         # The search did provide some information
         any_info=any_info,
 
@@ -281,13 +271,12 @@ def run(places):
     processed_places = list()
 
     num_places_with_gpt = 0
-    num_places_with_inconsitency = 0
 
     with tqdm(pool.imap_unordered(get_google_info, places),
               total=len(places)) as bar:
         for place in bar:
             if not place:
-                print ("Check proxy!")
+                bar.write("Check proxy!")
                 quit()
 
             processed_places.append(place)
@@ -295,13 +284,8 @@ def run(places):
             if 'popular_times' in place['google']:
                 num_places_with_gpt += 1
 
-            if 'status' in place['google']['debug_info']:
-                if place['google']['debug_info']['status'] == 'nok_distance':
-                    num_places_with_inconsitency += 1
-
             bar.set_postfix({
                 'gpt': num_places_with_gpt,
-                'incons': num_places_with_inconsitency,
             })
 
     return processed_places

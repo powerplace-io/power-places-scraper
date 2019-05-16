@@ -1,17 +1,22 @@
 import argparse
 import sys
 import os
+import json
+import tqdm
 
-from places_scraper.osm_scraper import run as scrape_osm
-from places_scraper.google_scraper import run as scrape_google
-from places_scraper.util import load_bounding_box, test_connection, init_proxy
+from places_scraper import scrape_osm, scrape_google
+from places_scraper.util import (
+    load_bounding_box, test_connection, init_proxy, current_time_str)
+
 
 def parse_args(args):
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('source', help="Source file or directory (if source is"
-                        "a directory, all files in it will be used" "recursively).")
-    parser.add_argument('target', help="Output file or directory")
+    parser.add_argument('source_path', help="Source file or directory (if"
+                        "source_path is a directory, all files in it will be"
+                        "used recursively).")
+
+    parser.add_argument('target_path', help="Output file or directory")
 
     parser.add_argument('--osm', action='store_true',
                         help="Get data from OpenStreetMap")
@@ -29,19 +34,18 @@ def parse_args(args):
 
     return parser.parse_args(args)
 
+
 def parse_proxy(args):
+    """Convert string to proxy host and port."""
     # if both proxy options are set, --proxy has precedence
     proxy_host, proxy_port = None, None
     if args.proxy:
-        try:
-            proxy_host, proxy_port = args.proxy.split(":")
-            proxy_port = int(proxy_port)
-        except ValueError:
-            print ("Proxy needs to be in format <host>:<port>.")
-            quit()
+        proxy_host, proxy_port = args.proxy.split(":")
+        proxy_port = int(proxy_port)
     elif args.proxy_tor:
         proxy_host, proxy_port = "localhost", 9150
     return proxy_host, proxy_port
+
 
 def crawl_file(source, target, use_osm, use_google):
     if os.path.isdir(target):
@@ -79,22 +83,33 @@ def main():
         use_osm, use_google = True, True
 
     # set proxy with host and port
-    init_proxy(*parse_proxy(args))
+    try:
+        proxy_hpst, proxy_port = parse_proxy(args)
+    except ValueError:
+        print ("Proxy needs to be in format <host>:<port>.")
+        quit()
+
+    if (proxy_hpst and proxy_port) is not None:
+        init_proxy(proxy_hpst, proxy_port)
 
     # check if conneciton is available
     if not test_connection():
         quit()
 
     # check if input is directory or file
-    if not os.path.exists(source):
-        print ("Source path '{}' does not exist".format(source))
+    if not os.path.exists(args.source_path):
+        print ("Source path '{}' does not exist".format(args.source_path))
         return False
 
-    if os.path.isdir(source):
+    if os.path.isdir(args.source_path):
         # go through all files in dir
-        for dirname, _, filenames in os.walk(source):
+        paths = list()
+        for dirname, _, filenames in os.walk(args.source_path):
             for filename in filenames:
-                path = os.path.join(dirname, filename)
-                crawl_file(path, target, use_osm, use_google)
+                paths.append(os.path.join(dirname, filename))
+        with tqdm(paths) as progress_bar:
+            for path in progress_bar:
+                progress_bar.write("Processing file '{}'.".format(path))
+                crawl_file(path, args.target_path, use_osm, use_google)
     else:
-        crawl_file(source, target, use_osm, use_google)
+        crawl_file(args.source_path, args.target_path, use_osm, use_google)
