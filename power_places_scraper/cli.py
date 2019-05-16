@@ -4,8 +4,8 @@ import os
 import json
 import tqdm
 
-from places_scraper import scrape_osm, scrape_google
-from places_scraper.util import (
+from power_places_scraper import scrape_osm, scrape_google
+from power_places_scraper.util import (
     load_bounding_box, test_connection, init_proxy, current_time_str)
 
 
