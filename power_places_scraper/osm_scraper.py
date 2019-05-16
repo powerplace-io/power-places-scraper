@@ -11,7 +11,7 @@ class OsmScraper:
 
     def __init__(self, num_lat=5, num_lng=5, accept_all=True):
         """Initialize the scraper."""
-        self.types = get_relevant_osm_types()
+        self.types = get_relevant_osm_tags()
         self.places = dict()
         self.dropped_places = 0
         self.num_lat = num_lat
@@ -30,13 +30,14 @@ class OsmScraper:
 
         entries = list()
         for key, values in self.types.items():
-            for value, t in values.items():
-                if value == "*":
-                    selector = '"{}"'.format(key)
-                else:
-                    selector = '"{}"="{}"'.format(key, value)
+            if values is None:
                 entries.append(node_way_pair_schema.format(
-                    bbox=bbox, selector=selector))
+                    bbox=bbox, selector='"{}"'.format(key)))
+            else:
+                for value in values:
+                    selector = '"{}"="{}"'.format(key, value)
+                    entries.append(node_way_pair_schema.format(
+                        bbox=bbox, selector='"{}"'.format(key)))
 
         return "(\n{}\n);\nout center;".format("\n".join(entries))
 

@@ -3,7 +3,6 @@
 import socks
 import socket
 
-from ruamel.yaml import YAML
 import geojson
 
 import datetime
@@ -12,7 +11,7 @@ import urllib.request
 import ssl
 
 
-RELVANT_OSM_TYPES_FILE = os.path.join(os.path.dirname(__file__),
+RELVANT_OSM_TAGS_FILE = os.path.join(os.path.dirname(__file__),
                                       "relevant_osm_types.yl")
 
 TIME_F_STR = "%Y-%m-%d %H:%M:%S"
@@ -78,7 +77,7 @@ def load_bounding_box(path):
         return ((south, west), (north, east))
 
 
-def get_relevant_osm_types():
+def get_relevant_osm_tags():
     """Get the tag information the overpass api shall be queried with."""
-    with open(RELVANT_OSM_TYPES_FILE, "r") as f:
-        return yaml.load(f)
+    with open(RELVANT_OSM_TAGS_FILE, "r") as f:
+        return json.load(f)
