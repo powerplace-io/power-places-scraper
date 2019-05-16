@@ -13,7 +13,7 @@ class OsmScraper:
         """Initialize the scraper."""
         self.types = get_relevant_osm_types()
         self.places = dict()
-        self.num_places_without_address = 0
+        self.dropped_places = 0
         self.num_lat = num_lat
         self.num_lng = num_lng
 
@@ -75,10 +75,10 @@ class OsmScraper:
                         sleep_time <<= 1
                     else:
                         break
-                boxes.set_postfix({
-                    "places": len(self.places),
-                    "dropped places": self.num_places_without_address
-                })
+                postfix = {"places": len(self.places)}
+                if self.dropped_places > 0:
+                    postfix["ignored elements"] = self.dropped_places
+                boxes.set_postfix(postfix)
 
         return list(self.places.values())
 
@@ -130,15 +130,16 @@ class OsmScraper:
 
         element_id = "{}/{}".format(element_type, element.id)
 
-        if self.element_accepted(element) and element_id not in self.places:
-            self.places[element_id] = {
-                "lat": lat,
-                "lng": lng,
-                "id": element_id,
-                "tags": element.tags,
-            }
+        if self.element_accepted(element):
+            if element_id not in self.places:
+                self.places[element_id] = {
+                    "lat": lat,
+                    "lng": lng,
+                    "id": element_id,
+                    "tags": element.tags,
+                }
         else:
-            self.num_places_without_address += 1
+            self.dropped_places += 1
 
 
 def run(bounding_box, **args):

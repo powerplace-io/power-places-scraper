@@ -47,7 +47,7 @@ def test_connection(test_url="https://google.com"):
 def load_bounding_box(path):
     """Get a boundin box from a geojson file."""
     with open(path, 'r') as f:
-        geo_json = geojson.loads(f)
+        geo_json = geojson.load(f)
 
         for k in ("features", 0, "geometry", "coordinates", 0):
             try:
