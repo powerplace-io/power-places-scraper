@@ -1,4 +1,4 @@
-from places_scraper.cli import PlacesScraperCLI
+from places_scraper.cli import main
 
 if __name__ == '__main__':
-    PlacesScraperCLI()
+    main()

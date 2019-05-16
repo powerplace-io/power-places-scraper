@@ -1,4 +1,4 @@
-from places_scraper.data_util import get_area_bbox, get_relevant_osm_types, save_osm_places, area_exists
+from places_scraper.util import get_relevant_osm_types, current_time_str
 from tqdm import tqdm
 import overpy
 from time import sleep
@@ -7,14 +7,10 @@ class OsmScraper:
     num_lat = 5
     num_lng = 5
 
-    def __init__(self, area_name):
-        self.area_name = area_name
-        self.area_bbox = get_area_bbox(area_name)
+    def __init__(self):
         self.types = get_relevant_osm_types()
         self.places = dict()
         self.num_places_without_address = 0
-
-        print ("Area '{}': {}".format(area_name, self.area_bbox))
 
     def build_query(self, bbox):
         bbox = ",".join([str(cc) for c in bbox for cc in c])
@@ -34,8 +30,8 @@ class OsmScraper:
 
         return "(\n{}\n);\nout center;".format("\n".join(entries))
 
-    def sub_areas(self):
-        (min_lat, min_lng), (max_lat, max_lng) = self.area_bbox
+    def sub_areas(self, bounding_box):
+        (min_lat, min_lng), (max_lat, max_lng) = bounding_box
 
         d_lat = (max_lat - min_lat) / self.num_lat
         d_lng = (max_lng - min_lng) / self.num_lng
@@ -47,10 +43,10 @@ class OsmScraper:
                     (min_lat + (i+1)*d_lat, min_lng + (j+1)*d_lng),
                 )
 
-    def run(self):
-        print ("Fetching data for area '{}' from Overpass API.".format(self.area_name))
+    def run(self, bounding_box):
         api = overpy.Overpass()
-        with tqdm(self.sub_areas(), total=self.num_lat*self.num_lng) as boxes:
+        with tqdm(self.sub_areas(bounding_box),
+                  total=self.num_lat*self.num_lng) as boxes:
             for bb in boxes:
                 query = self.build_query(bb)
 
@@ -68,7 +64,8 @@ class OsmScraper:
                     "places": len(self.places),
                     "dropped places": self.num_places_without_address
                 })
-        self.save_places()
+
+        return list(self.places.values())
 
 
     def handle_response(self, result):
@@ -120,8 +117,6 @@ class OsmScraper:
         else:
             self.num_places_without_address += 1
 
-    def save_places(self):
-        save_osm_places(self.area_name, list(self.places.values()))
 
-def run(area_name):
-    OsmScraper(area_name).run()
+def run(bounding_box):
+    return OsmScraper().run(bounding_box)

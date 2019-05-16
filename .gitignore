@@ -1,6 +1,4 @@
 __pycache__
 venv
-data/osm_places/**
-data/places/**
-data/reports/**
+data
 !/**/.gitkeep
