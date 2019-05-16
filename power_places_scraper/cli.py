@@ -47,11 +47,8 @@ def parse_proxy(args):
     return proxy_host, proxy_port
 
 
-def crawl_file(source, target, use_osm, use_google):
-    if os.path.isdir(target):
-        basename = os.path.basename(source)
-        name = os.path.splitext(basename)[0] + '.json'
-        target = os.path.join(target, name)
+def crawl_file(source, target, use_osm, use_google, info_stream=sys.stdout):
+    info_stream.write("Processing file '{}'.".format(source))
 
     if use_osm:
         # get bounding box from source file
@@ -102,14 +99,28 @@ def main():
         return False
 
     if os.path.isdir(args.source_path):
-        # go through all files in dir
+        if not os.path.isdir(args.target_path):
+            print ("If source path is a directory, target path must be a"
+                   "directory as well.")
+            quit()
+
+        # recursively go through all files in dir
         paths = list()
         for dirname, _, filenames in os.walk(args.source_path):
             for filename in filenames:
                 paths.append(os.path.join(dirname, filename))
-        with tqdm(paths) as progress_bar:
-            for path in progress_bar:
-                progress_bar.write("Processing file '{}'.".format(path))
-                crawl_file(path, args.target_path, use_osm, use_google)
+
+        # show a progress bar displaying the number of file already processed
+        with tqdm(paths) as bar:
+            # process all files in the directory
+            for path in bar:
+                # determine the target path
+                basename = os.path.basename(path)
+                name = os.path.splitext(basename)[0] + '.json'
+                target = os.path.join(args.target_path, name)
+
+                # process the file
+                crawl_file(path, target, use_osm, use_google, info_stream=bar)
     else:
-        crawl_file(args.source_path, args.target_path, use_osm, use_google)
+        path = args.source_path
+        crawl_file(path, args.target_path, use_osm, use_google)
