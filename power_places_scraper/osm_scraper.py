@@ -1,6 +1,6 @@
 """Functions for querying the Overpass API."""
 
-from places_scraper.util import get_relevant_osm_types
+from power_places_scraper.util import get_relevant_osm_types
 from tqdm import tqdm
 import overpy
 from time import sleep
