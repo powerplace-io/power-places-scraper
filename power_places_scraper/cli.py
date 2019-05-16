@@ -2,7 +2,7 @@ import argparse
 import sys
 import os
 import json
-import tqdm
+from tqdm import tqdm
 
 from power_places_scraper import scrape_osm, scrape_google
 from power_places_scraper.util import (
@@ -67,8 +67,9 @@ def crawl_file(source, target, use_osm, use_google, info_stream=sys.stdout):
         data['places'] = scrape_google(data['places'])
         data['google_scraping_finished'] = current_time_str()
 
+    info_stream.write("Saving data at '{}'.".format(target))
     with open(target, 'w') as f:
-        json.dump(data)
+        json.dump(data, f)
 
 
 def main():
@@ -111,7 +112,7 @@ def main():
                 paths.append(os.path.join(dirname, filename))
 
         # show a progress bar displaying the number of file already processed
-        with tqdm(paths) as bar:
+        with tqdm(paths, unit="files") as bar:
             # process all files in the directory
             for path in bar:
                 # determine the target path
