@@ -185,6 +185,10 @@ def get_google_info(place):
     google_types = [t[0] for t in (index_get(info, 76) or [])]
     google_url = index_get(info, 27)
 
+    google_address = index_get(info, 2)
+    google_phone = index_get(info, 3, 0)
+    google_website = index_get(info, 7, 1)
+
     rating = index_get(info, 4, 7)
 
     rating_n = index_get(info, 4, 8)
@@ -232,6 +236,9 @@ def get_google_info(place):
         time_spent=time_spent,
         types=google_types,
         name=google_name,
+        website=google_website,
+        address=google_address,
+        phone=google_phone,
     )
 
     any_info = any(result.values())
