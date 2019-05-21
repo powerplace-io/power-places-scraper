@@ -4,63 +4,71 @@ from tqdm import tqdm
 import overpy
 from time import sleep
 import os
-import json
 
+
+DEFAULT_TAG_FILTER_OBJECTS = [
+    # select elements that have a name and a full address
+    {"name": None, "addr:full": None},
+    # OR have a name and a street name
+    {"name": None, "addr:street": None}
+]
 
 
 class OsmScraper:
     """Functionality for querying the Overpass API."""
 
     def __init__(self, num_lat=8, num_lng=8, accept_all=False,
-                 relevant_osm_tags_path=None):
+                 tag_filter_objects=DEFAULT_TAG_FILTER_OBJECTS):
         """Initialize the scraper."""
-        if relevant_osm_tags_path is None:
-            self.relevant_tags = []
-        else:
-            self.init_relevant_osm_tags(relevant_osm_tags_path)
-
+        self.tag_filter_objects = tag_filter_objects
         self.places = dict()
         self.num_lat = num_lat
         self.num_lng = num_lng
 
-        self.sufficient_tag_sets = [
-            ("name", "addr:full"),
-            ("name", "addr:street")
-        ]
+    def partial_tag_queries_from_item(self, item):
+        """Return disjunctive OverpassQL tag queries for a key, values pair."""
+        key, values = item
+        if values is None or len(values) == 0:
+            yield '["{}"]'.format(key)
+        elif isinstance(values, str):
+            yield '["{}"="{}"]'.format(key, values)
+        else:
+            for value in values:
+                yield '["{}"="{}"]'.format(key, value)
 
-    def init_relevant_osm_tags(self, relevant_osm_tags_path):
-        """Get the tag information the overpass api shall be queried with."""
-        with open(relevant_osm_tags_path, "r") as f:
-            self.relevant_tags = json.load(f)
-
-    @property
-    def type_selectors(self):
-        if len(self.relevant_tags) == 0:
+    def tag_queries_from_object(self, obj):
+        """Return disjunctive chains of conjunctive tag queries."""
+        if len(obj) == 0:
             yield ""
         else:
-            for key, values in self.relevant_tags.items():
-                if values is None:
-                    yield '["{}"]'.format(key)
-                else:
-                    for value in values:
-                        yield '["{}"="{}"]'.format(key, value)
+            obj = dict(obj)
+            for partial in self.partial_tag_queries_from_item(obj.popitem()):
+                for rest in self.tag_queries_from_object(obj):
+                    yield partial + rest
+
+    @property
+    def tag_filters(self):
+        """Return all disjunctive chains of conjunctive tag queries."""
+        if self.tag_filter_objects is None or len(self.tag_filter_objects) == 0:
+            yield ""
+        else:
+            for obj in self.tag_filter_objects:
+                for tag_query in self.tag_queries_from_object(obj):
+                    yield tag_query
 
     def build_query(self, bbox):
         """Build an Overpass QL query for a given bounding box."""
         bbox = ",".join([str(cc) for c in bbox for cc in c])
 
         lines = list()
-        for tags in self.sufficient_tag_sets:
-            tags_string = "".join(["['{}']".format(tag) for tag in tags])
-            for sel in self.type_selectors:
-                for element in ("node", "way"):
-                    lines.append(
-                        "{element}{req_tags}{type_selector}({bbox});".format(
-                            element=element,
-                            type_selector=sel,
-                            req_tags=tags_string,
-                            bbox=bbox,
-                        ))
+        for query in self.tag_filters:
+            for element in ("node", "way"):
+                lines.append(
+                    "{element}{query}({bbox});".format(
+                        element=element,
+                        query=query,
+                        bbox=bbox,
+                    ))
 
         return "(\n{}\n);\nout center;".format("\n".join(lines))
 

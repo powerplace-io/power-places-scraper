@@ -5,11 +5,10 @@ import json
 from tqdm import tqdm
 
 from power_places_scraper import scrape_osm, scrape_google
+from power_places_scraper.osm_scraper import DEFAULT_TAG_FILTER_OBJECTS
 from power_places_scraper.util import (
     load_bounding_box, test_connection, init_proxy, current_time_str)
 
-RELVANT_OSM_TAGS_PATH = os.path.join(os.path.dirname(__file__),
-                                     "relevant_osm_tags.json")
 
 def parse_args(args):
     parser = argparse.ArgumentParser()
@@ -30,13 +29,9 @@ def parse_args(args):
     parser.add_argument('--proxy', help="Use a proxy, format: <host>:<port>",
                         default=None, dest="proxy")
 
-    parser.add_argument('--tag-selection', help="Use --tag-selection <path> to"
-                        "set the file to read the tag selection from.",
-                        default=RELVANT_OSM_TAGS_PATH, dest='tag_selection')
-
-    parser.add_argument('--no-tag-selection', help="Use --no-tag-selection to"
-                        "use all element disregarding the relevant type tags.",
-                        action='store_false', dest='use_tag_selection')
+    parser.add_argument('--tag-filters', help="Use this option to specify"
+                        "which elements to query from Overpass.",
+                        action='store', default=None, dest="tag_filter_path")
 
     parser.add_argument('--tor', help="Use default TOR proxy settings (if both"
                         "options are set, --proxy has precedence).",
@@ -65,8 +60,9 @@ def crawl_file(source, target, **params):
     info_stream = params.get('info_stream', sys.stdout)
     use_osm = params.get('use_osm', False)
     use_google = params.get('use_google', False)
-    tag_selection_path = params.get('tag_selection_path' ,None)
     google_crawler_processes = params.get('num_processes', 40)
+    tag_filter_objects = params.get(
+        'tag_filter_objects', DEFAULT_TAG_FILTER_OBJECTS)
 
     info_stream.write("Processing file '{}'.".format(source))
 
@@ -77,6 +73,7 @@ def crawl_file(source, target, **params):
             places=scrape_osm(bounding_box),
             osm_scraping_finished=current_time_str(),
             bounding_box=bounding_box,
+            tag_filter_objects=tag_filter_objects,
         )
     else:
         # get places from osm file
@@ -100,9 +97,11 @@ def params_from_args(args):
     else:
         params['use_osm'], params['use_google'] = args.osm, args.google
 
-    params['tag_selection_path'] = args.tag_selection if args.use_tag_selection else None
-
     params['num_processes'] = args.num_processes
+
+    if args.tag_filter_path is not None:
+        with open(args.tag_filter_path, 'r') as f:
+            params['tag_filter_objects'] = json.load(f)
 
     # set proxy with host and port
     try:
