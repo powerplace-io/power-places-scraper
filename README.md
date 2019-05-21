@@ -26,7 +26,7 @@ achieve this.
 4. Install the package:
   `pip install -e .`
 5. *(Optional) Start up a proxy (e.g. TOR: just start the browser in the [tor bundle][tor_browser])*
-6. Run the scraper (if you want to use a proxy, make sure to specify it via `--proxy`; if you are using TOR with the default settings, you can use the `--tor` option).
+6. Run the scraper (if you want to use a proxy, make sure to specify it via `--proxy`; if you are using TOR with the default settings, you can use the `--tor` option):
   `power_places_scraper samples/berlin_mitte.geojson berlin_places.json`
 
 ## Scraping Open Street Map

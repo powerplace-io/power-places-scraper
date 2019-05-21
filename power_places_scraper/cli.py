@@ -81,12 +81,14 @@ def crawl_file(source, target, **params):
             data = json.load(f)
 
     if use_google:
-        data['places'] = scrape_google(data['places'])
+        data['places'] = scrape_google(data['places'],
+                                       num_processes=google_crawler_processes)
         data['google_scraping_finished'] = current_time_str()
 
     info_stream.write("Saving data at '{}'.".format(target))
     with open(target, 'w') as f:
         json.dump(data, f)
+
 
 def params_from_args(args):
     params = dict()
