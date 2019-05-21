@@ -19,9 +19,9 @@ achieve this.
 2. Switch to the repository:
   `cd power-places-scraper`
 3. *(Optional) Use a virtual environment for this application*
-  * *Add a new virtual environment (here its called `venv`):*
+    * *Add a new virtual environment (here its called `venv`):*
     `python -m virtualenv -p python3 venv`
-  * *Activate the virtual environment:*
+    * *Activate the virtual environment:*
     `. venv/bin/activate`
 4. Install the package:
   `pip install -e .`
