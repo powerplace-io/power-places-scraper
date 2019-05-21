@@ -17,7 +17,7 @@ DEFAULT_TAG_FILTER_OBJECTS = [
 class OsmScraper:
     """Functionality for querying the Overpass API."""
 
-    def __init__(self, num_lat=8, num_lng=8, accept_all=False,
+    def __init__(self, num_lat=5, num_lng=5, accept_all=False,
                  tag_filter_objects=DEFAULT_TAG_FILTER_OBJECTS):
         """Initialize the scraper."""
         self.tag_filter_objects = tag_filter_objects
