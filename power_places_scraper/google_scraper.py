@@ -272,8 +272,8 @@ def get_google_info(place):
     )
 
 
-def run(places):
-    pool = Pool(processes=40)
+def run(places, num_processes=40):
+    pool = Pool(processes=num_processes)
 
     processed_places = list()
 

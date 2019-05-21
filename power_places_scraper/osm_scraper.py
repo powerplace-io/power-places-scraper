@@ -7,17 +7,18 @@ import os
 import json
 
 
-RELVANT_OSM_TAGS_PATH = os.path.join(os.path.dirname(__file__),
-                                     "relevant_osm_tags.json")
-
 
 class OsmScraper:
     """Functionality for querying the Overpass API."""
 
     def __init__(self, num_lat=8, num_lng=8, accept_all=False,
-                 relevant_osm_tags_path=RELVANT_OSM_TAGS_PATH):
+                 relevant_osm_tags_path=None):
         """Initialize the scraper."""
-        self.init_relevant_osm_tags(relevant_osm_tags_path)
+        if relevant_osm_tags_path is None:
+            self.relevant_tags = []
+        else:
+            self.init_relevant_osm_tags(relevant_osm_tags_path)
+
         self.places = dict()
         self.num_lat = num_lat
         self.num_lng = num_lng
@@ -34,12 +35,15 @@ class OsmScraper:
 
     @property
     def type_selectors(self):
-        for key, values in self.relevant_tags.items():
-            if values is None:
-                yield '"{}"'.format(key)
-            else:
-                for value in values:
-                    yield '"{}"="{}"'.format(key, value)
+        if len(self.relevant_tags) == 0:
+            yield ""
+        else:
+            for key, values in self.relevant_tags.items():
+                if values is None:
+                    yield '["{}"]'.format(key)
+                else:
+                    for value in values:
+                        yield '["{}"="{}"]'.format(key, value)
 
     def build_query(self, bbox):
         """Build an Overpass QL query for a given bounding box."""
@@ -51,7 +55,7 @@ class OsmScraper:
             for sel in self.type_selectors:
                 for element in ("node", "way"):
                     lines.append(
-                        "{element}{req_tags}[{type_selector}]({bbox});".format(
+                        "{element}{req_tags}{type_selector}({bbox});".format(
                             element=element,
                             type_selector=sel,
                             req_tags=tags_string,

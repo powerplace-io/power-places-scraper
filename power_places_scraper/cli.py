@@ -8,6 +8,8 @@ from power_places_scraper import scrape_osm, scrape_google
 from power_places_scraper.util import (
     load_bounding_box, test_connection, init_proxy, current_time_str)
 
+RELVANT_OSM_TAGS_PATH = os.path.join(os.path.dirname(__file__),
+                                     "relevant_osm_tags.json")
 
 def parse_args(args):
     parser = argparse.ArgumentParser()
@@ -28,9 +30,21 @@ def parse_args(args):
     parser.add_argument('--proxy', help="Use a proxy, format: <host>:<port>",
                         default=None, dest="proxy")
 
+    parser.add_argument('--tag-selection', help="Use --tag-selection <path> to"
+                        "set the file to read the tag selection from.",
+                        default=RELVANT_OSM_TAGS_PATH, dest='tag_selection')
+
+    parser.add_argument('--no-tag-selection', help="Use --no-tag-selection to"
+                        "use all element disregarding the relevant type tags.",
+                        action='store_false', dest='use_tag_selection')
+
     parser.add_argument('--tor', help="Use default TOR proxy settings (if both"
                         "options are set, --proxy has precedence).",
                         action='store_true', dest="proxy_tor")
+
+    parser.add_argument('--num-processes', help="Number of processes to use"
+                        "for google search crawling.", type=int, default=40,
+                        action='store', dest="num_processes")
 
     return parser.parse_args(args)
 
@@ -47,7 +61,13 @@ def parse_proxy(args):
     return proxy_host, proxy_port
 
 
-def crawl_file(source, target, use_osm, use_google, info_stream=sys.stdout):
+def crawl_file(source, target, **params):
+    info_stream = params.get('info_stream', sys.stdout)
+    use_osm = params.get('use_osm', False)
+    use_google = params.get('use_google', False)
+    tag_selection_path = params.get('tag_selection_path' ,None)
+    google_crawler_processes = params.get('num_processes', 40)
+
     info_stream.write("Processing file '{}'.".format(source))
 
     if use_osm:
@@ -71,24 +91,34 @@ def crawl_file(source, target, use_osm, use_google, info_stream=sys.stdout):
     with open(target, 'w') as f:
         json.dump(data, f)
 
-
-def main():
-    args = parse_args(sys.argv[1:])
+def params_from_args(args):
+    params = dict()
 
     # if neither --osm nor --google is set, both are used
-    use_osm, use_google = args.osm, args.google
-    if not use_osm and not use_google:
-        use_osm, use_google = True, True
+    if not args.osm and not args.google:
+        params['use_osm'], params['use_google'] = True, True
+    else:
+        params['use_osm'], params['use_google'] = args.osm, args.google
+
+    params['tag_selection_path'] = args.tag_selection if args.use_tag_selection else None
+
+    params['num_processes'] = args.num_processes
 
     # set proxy with host and port
     try:
-        proxy_hpst, proxy_port = parse_proxy(args)
+        params['proxy_host'], params['proxy_port'] = parse_proxy(args)
     except ValueError:
         print ("Proxy needs to be in format <host>:<port>.")
         quit()
 
-    if (proxy_hpst and proxy_port) is not None:
-        init_proxy(proxy_hpst, proxy_port)
+    return params
+
+def main():
+    args = parse_args(sys.argv[1:])
+    params = params_from_args(args)
+
+    if (params['proxy_host'] and params['proxy_port']) is not None:
+        init_proxy(params['proxy_host'], params['proxy_port'])
 
     # check if conneciton is available
     if not test_connection():
@@ -121,7 +151,10 @@ def main():
                 target = os.path.join(args.target_path, name)
 
                 # process the file
-                crawl_file(path, target, use_osm, use_google, info_stream=bar)
+                crawl_file(path, target, **params)
     else:
         path = args.source_path
-        crawl_file(path, args.target_path, use_osm, use_google)
+        target = args.target_path
+        crawl_file(path, target, **params)
+
+    print("Done.")
