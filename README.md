@@ -21,6 +21,7 @@ achieve this.
   `cd power-places-scraper`
 
 3. *(Optional) Use a virtual environment for this application*
+
   - *Add a new virtual environment (here its called `venv`):*
     `python -m virtualenv -p python3 venv`
   - *Activate the virtual environment:*
