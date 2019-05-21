@@ -10,6 +10,8 @@ needs to be made to cover a large area). An easy workaround consists of grabing
 a list of places from somewhere else. This scraper uses the OSM Overpass API to
 achieve this.
 
+## Disclaimer
+
 ## Getting Started
 
 1. Clone the repository:
@@ -37,9 +39,11 @@ achieve this.
 
 5. Run the scraper (if you want to use a proxy, make sure to specify it via `--proxy`; if you are using TOR with the default settings, you can use the `--tor` option).
 
-  `power_places_scraper berlin.geojson berlin.json`
+  `power_places_scraper samples/berlin_mitte.geojson berlin_places.json`
 
-## Scraping osm
+## Scraping Open Street Map
+
+The data from the OSM Overpass API will be used to get a set of places to start with. You can filter the elements by using the `--tag-filters` option.
 
 *Note: Depending on the size of the specified search area, the query to the
 Overpass API needs to be split up. For our use cases 25 parts has worked
@@ -48,16 +52,20 @@ class.*
 
 ## Scraping Google
 
-*Note: The place resulting from the google does not necessarily match the
+
+
+The place resulting from the google does not necessarily match the
 OSM place that was supposed to be looked up. There are two possuble ways of
 resolvin this issue:
 
- 1. Just ignore the OSM data and remove all duplicates from the google data
- 2. Due some kind of consistency check between the OSM place and the resulting
-    Google Place (the distance between the places as well as the name might be
-    helpful for that).*
+ 1. Just ignore the OSM data and remove all duplicates from the google data.
+
+ 2. Do some kind of matching between the OSM place and the resulting
+    Google Place.
 
 
 ## Using a proxy
+
+It might be appropriate to use a proxy for scraping googles data. If you want to use a proxy (at the moment only socks5 proxies are supported), you can use the `--proxy` option (or if you are using tor with the default configuration: `--tor`).
 
 [tor_browser]: https://www.torproject.org/download/ "Tor Browser Download Page"
