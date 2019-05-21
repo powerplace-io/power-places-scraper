@@ -31,7 +31,7 @@ def get_search_string(place):
         return "{} {}".format(tags['name'], tags['addr:full'])
     else:
         return " ".join([
-            key for key in [
+            tags[key] for key in [
                 'name', 'addr:street', 'addr:housenumber', 'addr:postcode',
                 'addr:city', 'addr:province'
             ]
@@ -278,6 +278,7 @@ def run(places):
     processed_places = list()
 
     num_places_with_gpt = 0
+    num_search_results = 0
 
     with tqdm(pool.imap_unordered(get_google_info, places), unit="places",
               total=len(places)) as bar:
@@ -288,11 +289,15 @@ def run(places):
 
             processed_places.append(place)
 
+            if place['google']['search_info']['any_info']:
+                num_search_results += 1
+
             if 'popular_times' in place['google']:
                 num_places_with_gpt += 1
 
             bar.set_postfix({
-                'gpt': num_places_with_gpt,
+                'search results': num_search_results,
+                'with gpt': num_places_with_gpt,
             })
 
     return processed_places
