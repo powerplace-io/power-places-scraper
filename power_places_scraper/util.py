@@ -1,14 +1,13 @@
 """Utility functions for the power places scraper cli."""
 
-import socks
-import socket
+import requests
 
 import geojson
 
 import datetime
 import os
-import urllib.request
-import ssl
+
+import logging
 
 
 TIME_F_STR = "%Y-%m-%d %H:%M:%S"
@@ -18,24 +17,14 @@ def current_time_str():
     """Return current date and time as str."""
     return datetime.datetime.now().strftime(TIME_F_STR)
 
-
-def init_proxy(host="localhost", port=9150):
-    """Init default proxy."""
-    socks.set_default_proxy(socks.SOCKS5, host, port)
-    socket.socket = socks.socksocket
-
-
-def test_connection(test_url="https://google.com"):
+def test_connection(proxies=None):
     """Test whether connection is working (relevant when using a proxy)."""
-    try:
-        urllib.request.urlopen(
-            urllib.request.Request(url=test_url, data=None),
-            context=ssl.SSLContext(ssl.PROTOCOL_TLSv1))
-        return True
-    except IOError:
-        print ("IO Error. This probably means that the onion router is not"
-               "running or is configured wrong.")
+    r = requests.get("https://api.ipify.org?format=json", proxies=proxies)
+    if not r.ok:
         return False
+    else:
+        logging.debug("Using ip: {}".format(r.json()["ip"]))
+        return True
 
 
 def load_bounding_box(path):

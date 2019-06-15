@@ -5,9 +5,8 @@ https://github.com/m-wrzr/populartimes
 """
 
 
-import ssl
-import urllib.request
-import urllib.parse
+import requests
+import functools
 
 import re
 import calendar
@@ -115,7 +114,7 @@ def get_popularity_for_day(popularity):
     return ret_popularity, ret_wait
 
 
-def get_google_info(place):
+def get_google_info(place, proxies=None):
     """Request information for a place and parse current popularity.
 
     :param place: place, scraped from osm
@@ -124,11 +123,11 @@ def get_google_info(place):
 
     search_string = get_search_string(place)
 
-    params_url = {
+    params = {
         "tbm": "map",
         "tch": 1,
         "hl": "en",
-        "q": urllib.parse.quote_plus(search_string),
+        "q": search_string,
         "pb": "!4m12!1m3!1d4005.9771522653964!2d-122.42072974863942!3d37.8077459796541!2m3!1f0!2f0!3f0!3m2!1i1125!2i976"
               "!4f13.1!7i20!10b1!12m6!2m3!5m1!6e2!20e3!10b1!16b1!19m3!2m2!1i392!2i106!20m61!2m2!1i203!2i100!3m2!2i4!5b1"
               "!6m6!1m2!1i86!2i86!1m2!1i408!2i200!7m46!1m3!1e1!2b0!3e3!1m3!1e2!2b1!3e2!1m3!1e2!2b0!3e3!1m3!1e3!2b0!3e3!"
@@ -140,20 +139,15 @@ def get_google_info(place):
               "!3b1"
     }
 
-    search_url = "https://www.google.de/search?" + "&".join(
-        k + "=" + str(v) for k, v in params_url.items())
-
-    # noinspection PyUnresolvedReferences
-    gcontext = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
+    search_url = "https://www.google.de/search"
 
     sleep_time = 1
 
     while True:
         try:
-            resp = urllib.request.urlopen(
-                urllib.request.Request(
-                    url=search_url, data=None, headers=USER_AGENT),
-                context=gcontext)
+            resp = requests.get(search_url, params=params,
+                proxies=proxies, headers=USER_AGENT)
+
             break
         except IOError:
             if sleep_time > 100:
@@ -162,7 +156,7 @@ def get_google_info(place):
                 sleep(sleep_time)
                 sleep_time <<= 2
 
-    data = resp.read().decode('utf-8').split('/*""*/')[0]
+    data = resp.text.split('/*""*/')[0]
 
     # find eof json
     jend = data.rfind("}")
@@ -272,7 +266,7 @@ def get_google_info(place):
     )
 
 
-def run(places, num_processes=40):
+def run(places, num_processes=40, proxies=None):
     pool = Pool(processes=num_processes)
 
     processed_places = list()
@@ -280,7 +274,9 @@ def run(places, num_processes=40):
     num_places_with_gpt = 0
     num_search_results = 0
 
-    with tqdm(pool.imap_unordered(get_google_info, places), unit="places",
+    search_func = functools.partial(get_google_info, proxies=proxies)
+
+    with tqdm(pool.imap_unordered(search_func, places), unit="places",
               total=len(places)) as bar:
         for place in bar:
             if not place:

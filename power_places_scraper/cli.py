@@ -7,7 +7,7 @@ from tqdm import tqdm
 from power_places_scraper import scrape_osm, scrape_google
 from power_places_scraper.osm_scraper import DEFAULT_TAG_FILTER_OBJECTS
 from power_places_scraper.util import (
-    load_bounding_box, test_connection, init_proxy, current_time_str)
+    load_bounding_box, test_connection, current_time_str)
 
 
 def parse_args(args):
@@ -26,7 +26,8 @@ def parse_args(args):
                         help="Get data from the google search (if neither"
                         "--osm nor --google is set, both are used).")
 
-    parser.add_argument('--proxy', help="Use a proxy, format: <host>:<port>",
+    parser.add_argument('--proxy', help="Use a proxy for google requests,"
+                                        "format: <host>:<port>",
                         default=None, dest="proxy")
 
     parser.add_argument('--tag-filters', help="Use this option to specify"
@@ -60,6 +61,7 @@ def crawl_file(source, target, **params):
     info_stream = params.get('info_stream', sys.stdout)
     use_osm = params.get('use_osm', False)
     use_google = params.get('use_google', False)
+    proxies = use_google = params.get('proxies', None)
     google_crawler_processes = params.get('num_processes', 40)
     tag_filter_objects = params.get(
         'tag_filter_objects', DEFAULT_TAG_FILTER_OBJECTS)
@@ -82,7 +84,8 @@ def crawl_file(source, target, **params):
 
     if use_google:
         data['places'] = scrape_google(data['places'],
-                                       num_processes=google_crawler_processes)
+                                       num_processes=google_crawler_processes,
+                                       proxies=proxies)
         data['google_scraping_finished'] = current_time_str()
 
     info_stream.write("Saving data at '{}'.".format(target))
@@ -118,12 +121,18 @@ def main():
     args = parse_args(sys.argv[1:])
     params = params_from_args(args)
 
+    proxies = None
+
     if (params['proxy_host'] and params['proxy_port']) is not None:
-        init_proxy(params['proxy_host'], params['proxy_port'])
+        s5_proxy = "socks5://{}:{}".format(
+            params['proxy_host'], params['proxy_port'])
+        params["proxies"] = dict(http=s5_proxy, https=s5_proxy)
+        # init_proxy(params['proxy_host'], params['proxy_port'])
 
     # check if conneciton is available
-    if not test_connection():
+    if not test_connection(proxies=params["proxies"]):
         quit()
+    print("Proxy tested.")
 
     # check if input is directory or file
     if not os.path.exists(args.source_path):
