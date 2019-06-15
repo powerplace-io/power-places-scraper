@@ -7,7 +7,6 @@ import geojson
 import datetime
 import os
 
-import logging
 
 
 TIME_F_STR = "%Y-%m-%d %H:%M:%S"
@@ -23,8 +22,7 @@ def test_connection(proxies=None):
     if not r.ok:
         return False
     else:
-        logging.debug("Using ip: {}".format(r.json()["ip"]))
-        return True
+        return r.json()["ip"]
 
 
 def load_bounding_box(path):
