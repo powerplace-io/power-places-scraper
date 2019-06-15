@@ -36,6 +36,6 @@ setup(
 
     # Dependent packages (distributions)
     install_requires=[
-        "geojson", "overpy", "PySocks", "tqdm"
+        "geojson", "overpy", "PySocks", "tqdm", "requests"
     ],
 )
