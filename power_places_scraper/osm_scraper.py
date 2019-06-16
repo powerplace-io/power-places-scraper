@@ -101,7 +101,10 @@ class OsmScraper:
                 while True:
                     try:
                         self.handle_response(api.query(query))
-                    except overpy.exception.OverpassTooManyRequests:
+                    except (
+                        overpy.exception.OverpassTooManyRequests,
+                        overpy.exception.OverpassGatewayTimeout
+                    ):
                         # Sleep, then retry
                         sleep(sleep_time)
                         sleep_time <<= 1
