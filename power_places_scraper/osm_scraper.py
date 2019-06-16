@@ -92,6 +92,7 @@ class OsmScraper:
     def run(self, bounding_box):
         """Run scraper for a given bounding_box."""
         api = overpy.Overpass()
+        num_retries = 0
         with tqdm(self.sub_areas(bounding_box), unit="sub areas",
                   total=self.num_lat*self.num_lng) as boxes:
             for bb in boxes:
@@ -107,10 +108,11 @@ class OsmScraper:
                     ):
                         # Sleep, then retry
                         sleep(sleep_time)
-                        sleep_time <<= 1
+                        sleep_time *= 2
+                        num_retries += 1
                     else:
                         break
-                postfix = {"places": len(self.places)}
+                postfix = {"places": len(self.places), "retries": num_retries}
                 boxes.set_postfix(postfix)
 
         return list(self.places.values())
