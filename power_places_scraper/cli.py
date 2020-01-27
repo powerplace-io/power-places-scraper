@@ -128,7 +128,7 @@ def params_from_args(args):
 
 
 def main():
-    """Main function for cli usage of the scraper."""
+    """Run scraper using cli arguments."""
     # Read command line arugment
     args = parse_args(sys.argv[1:])
 
