@@ -19,6 +19,12 @@ Nearby-Search (and a Google API key)
 
 ## Disclaimer
 
+This program is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY. You are responsible for making sure you are complying to the Terms of
+Service of the Google Search and the OSM Overpass API when using this project.
+
+
+
 ## Getting Started
 
 1. Clone the repository:
