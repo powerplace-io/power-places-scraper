@@ -3,12 +3,19 @@
 This scraper aims to scrape places (buisnesses, bars, cafés, etc.) and provide
 a popularity index by utilizing the google search.
 
-The most straigh forward way of getting a list of all places google knows in an
-area would be to use the Nearby-Search in the Google Places API. Queries to
-this API have become quite expensive (considering a large number of requests
-needs to be made to cover a large area). An easy workaround consists of grabing
-a list of places from somewhere else. This scraper uses the OSM Overpass API to
-achieve this.
+The most straight forward and complete way of getting all google-listed places
+in an area is to use the Nearby-Search in the Google Places API. This approach
+is taken in the repository [m-wrtr/populartimes](https://github.com/m-wrzr/populartimes)
+(which is used as the base for this project).
+
+Queries to the Nearby-Search API have become quite expensive (considering a
+large number of requests needs to be made to cover a large area). An easy
+workaround consists of grabbing a list of places from somewhere else. This
+scraper uses the OSM Overpass API to get a list of places and adds popular
+times indices using the the google search. Though this process does not return
+a complete list of google-listed places, it does not require the usage of the
+Nearby-Search (and a Google API key)
+
 
 ## Disclaimer
 
