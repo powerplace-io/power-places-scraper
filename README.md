@@ -44,7 +44,8 @@ Service of the Google Search and the OSM Overpass API when using this project.
 
 ## Scraping Open Street Map
 
-The data from the OSM Overpass API will be used to get a set of places to start with. You can filter the elements by using the `--tag-filters` option.
+The data from the OSM Overpass API will be used to get a set of places to start
+with. You can filter the elements by using the `--tag-filters` option.
 
 *Note: Depending on the size of the specified search area, the query to the
 Overpass API needs to be split up. For our use cases 25 parts has worked
@@ -56,8 +57,8 @@ class.*
 
 
 The place resulting from the google does not necessarily match the
-OSM place that was supposed to be looked up. There are two possuble ways of
-resolvin this issue:
+OSM place that was supposed to be looked up. There are two possible ways of
+resolving this issue:
 
  1. Just ignore the OSM data and remove all duplicates from the google data.
 
@@ -67,6 +68,9 @@ resolvin this issue:
 
 ## Using a proxy
 
-It might be appropriate to use a proxy for scraping googles data. If you want to use a proxy (at the moment only socks5 proxies are supported), you can use the `--proxy` option (or if you are using tor with the default configuration: `--tor`).
+It might be appropriate to use a proxy for scraping googles data. If you want
+to use a proxy (at the moment only socks5 proxies are supported), you can use
+the `--proxy` option (or if you are using [tor][tor_browser] with the default
+configuration: `--tor`).
 
 [tor_browser]: https://www.torproject.org/download/ "Tor Browser Download Page"
