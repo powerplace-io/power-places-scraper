@@ -1,7 +1,9 @@
 # Power Places Scraper
 
 This scraper aims to scrape places (buisnesses, bars, cafés, etc.) and provide
-a popularity index by utilizing the google search.
+a popularity index by utilizing the google search. It was written
+[powerplace.io](https://powerplace.io) for internal usage and later made
+public.
 
 The most straight forward and complete way of getting all google-listed places
 in an area is to use the Nearby-Search in the Google Places API. This approach

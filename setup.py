@@ -25,7 +25,7 @@ setup(
     # Details
     url="https://www.powerplace.io//",
 
-    description="Scraper to scrape places from third party sources.",
+    description="Scraper to retrieve places from third party sources.",
 
     long_description=long_description,
     long_description_content_type='text/markdown',
