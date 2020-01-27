@@ -11,6 +11,7 @@ from power_places_scraper.util import (
 
 
 def parse_args(args):
+    """Parse commandline arguments."""
     parser = argparse.ArgumentParser()
 
     parser.add_argument('source_path', help="Source file or directory (if"
@@ -39,30 +40,19 @@ def parse_args(args):
                         action='store_true', dest="proxy_tor")
 
     parser.add_argument('--num-processes', help="Number of processes to use"
-                        "for google search crawling.", type=int, default=40,
+                        "for google search scraping.", type=int, default=40,
                         action='store', dest="num_processes")
 
     return parser.parse_args(args)
 
 
-def parse_proxy(args):
-    """Convert string to proxy host and port."""
-    # if both proxy options are set, --proxy has precedence
-    proxy_host, proxy_port = None, None
-    if args.proxy:
-        proxy_host, proxy_port = args.proxy.split(":")
-        proxy_port = int(proxy_port)
-    elif args.proxy_tor:
-        proxy_host, proxy_port = "localhost", 9150
-    return proxy_host, proxy_port
-
-
-def crawl_file(source, target, **params):
+def scrape_file(source, target, **params):
+    """Scrape area defined in source path and write places to target path."""
     info_stream = params.get('info_stream', sys.stdout)
     use_osm = params.get('use_osm', False)
     use_google = params.get('use_google', False)
     proxies = use_google = params.get('proxies', None)
-    google_crawler_processes = params.get('num_processes', 40)
+    google_processes = params.get('num_processes', 40)
     tag_filter_objects = params.get(
         'tag_filter_objects', DEFAULT_TAG_FILTER_OBJECTS)
 
@@ -84,7 +74,7 @@ def crawl_file(source, target, **params):
 
     if use_google:
         data['places'] = scrape_google(data['places'],
-                                       num_processes=google_crawler_processes,
+                                       num_processes=google_processes,
                                        proxies=proxies)
         data['google_scraping_finished'] = current_time_str()
 
@@ -93,7 +83,22 @@ def crawl_file(source, target, **params):
         json.dump(data, f)
 
 
+def parse_proxy(args):
+    """Convert string to proxy host and port."""
+    # if both proxy options are set, --proxy has precedence
+    proxy_host, proxy_port = None, None
+
+    if args.proxy:
+        proxy_host, proxy_port = args.proxy.split(":")
+        proxy_port = int(proxy_port)
+    elif args.proxy_tor:
+        proxy_host, proxy_port = "localhost", 9150
+
+    return proxy_host, proxy_port
+
+
 def params_from_args(args):
+    """Create parameter dict for usage of scraping function."""
     params = dict()
 
     # if neither --osm nor --google is set, both are used
@@ -104,9 +109,11 @@ def params_from_args(args):
 
     params['num_processes'] = args.num_processes
 
+    # If a tag filter file has been specified, load file
     if args.tag_filter_path is not None:
         with open(args.tag_filter_path, 'r') as f:
             params['tag_filter_objects'] = json.load(f)
+    # else: if param is not set, default will be used
 
     # set proxy with host and port
     try:
@@ -117,11 +124,14 @@ def params_from_args(args):
 
     return params
 
-def main():
-    args = parse_args(sys.argv[1:])
-    params = params_from_args(args)
 
-    proxies = None
+def main():
+    """Main function for cli usage of the scraper."""
+    # Read command line arugment
+    args = parse_args(sys.argv[1:])
+
+    # Parse scraping paramters
+    params = params_from_args(args)
 
     if (params['proxy_host'] and params['proxy_port']) is not None:
         s5_proxy = "socks5://{}:{}".format(
@@ -132,7 +142,7 @@ def main():
     # check if conneciton is available
     if not test_connection(proxies=params["proxies"]):
         quit()
-    print("Proxy tested.")
+    print("Connection tested.")
 
     # check if input is directory or file
     if not os.path.exists(args.source_path):
@@ -161,10 +171,10 @@ def main():
                 target = os.path.join(args.target_path, name)
 
                 # process the file
-                crawl_file(path, target, **params)
+                scrape_file(path, target, **params)
     else:
         path = args.source_path
         target = args.target_path
-        crawl_file(path, target, **params)
+        scrape_file(path, target, **params)
 
     print("Done.")
