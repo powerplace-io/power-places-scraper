@@ -56,11 +56,12 @@ def scrape_file(source, target, **params):
     tag_filter_objects = params.get(
         'tag_filter_objects', DEFAULT_TAG_FILTER_OBJECTS)
 
-    info_stream.write("Processing file '{}'.".format(source))
+    info_stream.write("Processing file '{}'.\n".format(source))
 
     if use_osm:
         # get bounding box from source file
         bounding_box = load_bounding_box(source)
+        info_stream.write("Downloading places from OSM Overpass API.\n")
         data = dict(
             places=scrape_osm(bounding_box),
             osm_scraping_finished=current_time_str(),
@@ -73,12 +74,13 @@ def scrape_file(source, target, **params):
             data = json.load(f)
 
     if use_google:
+        info_stream.write("Running google searches.\n")
         data['places'] = scrape_google(data['places'],
                                        num_processes=google_processes,
                                        proxies=proxies)
         data['google_scraping_finished'] = current_time_str()
 
-    info_stream.write("Saving data at '{}'.".format(target))
+    info_stream.write("Saving data at '{}'.\n".format(target))
     with open(target, 'w') as f:
         json.dump(data, f)
 
