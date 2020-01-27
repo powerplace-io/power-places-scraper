@@ -73,4 +73,7 @@ to use a proxy (at the moment only socks5 proxies are supported), you can use
 the `--proxy` option (or if you are using [tor][tor_browser] with the default
 configuration: `--tor`).
 
+*Note: The proxy is only used for querying the google search, not for calling
+the OSM Overpass API.*
+
 [tor_browser]: https://www.torproject.org/download/ "Tor Browser Download Page"
