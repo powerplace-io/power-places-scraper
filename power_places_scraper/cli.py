@@ -7,7 +7,7 @@ from tqdm import tqdm
 from power_places_scraper import scrape_osm, scrape_google
 from power_places_scraper.osm_scraper import DEFAULT_TAG_FILTER_OBJECTS
 from power_places_scraper.util import (
-    load_bounding_box, test_connection, current_time_str)
+    load_bounding_box, get_external_ip, current_time_str)
 
 
 def parse_args(args):
@@ -140,9 +140,11 @@ def main():
         # init_proxy(params['proxy_host'], params['proxy_port'])
 
     # check if conneciton is available
-    if not test_connection(proxies=params["proxies"]):
+    proxy_ip = get_external_ip(proxies=params["proxies"])
+    if not proxy_ip:
+        print ("Connection via proxy could not be established.")
         quit()
-    print("Connection tested.")
+    print("Connection tested. Using external ip {} for google search.".format(proxy_ip))
 
     # check if input is directory or file
     if not os.path.exists(args.source_path):

@@ -16,7 +16,8 @@ def current_time_str():
     """Return current date and time as str."""
     return datetime.datetime.now().strftime(TIME_F_STR)
 
-def test_connection(proxies=None):
+
+def get_external_ip(proxies=None):
     """Test whether connection is working (relevant when using a proxy)."""
     r = requests.get("https://api.ipify.org?format=json", proxies=proxies)
     if not r.ok:
