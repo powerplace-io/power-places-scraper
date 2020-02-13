@@ -29,20 +29,15 @@ Service of the Google Search and the OSM Overpass API when using this project.
 
 ## Getting Started
 
-1. Clone the repository:
-  `git clone <url>`
-2. Switch to the repository:
-  `cd power-places-scraper`
-3. *(Optional) Use a virtual environment for this application*
+1. *(Optional) Use a virtual environment for this application*
     * *Add a new virtual environment (here its called `venv`):*
     `python -m virtualenv -p python3 venv`
     * *Activate the virtual environment:*
     `. venv/bin/activate`
-4. Install the package (the `-e` option allows you to edit the package in the
-   current directory):
-  `pip install -e .`
-5. *(Optional) Start up a proxy (e.g. TOR: just start the browser in the [tor bundle][tor_browser])*
-6. Run the scraper (if you want to use a proxy, make sure to specify it via `--proxy`; if you are using TOR with the default settings, you can use the `--tor` option):
+2. Install the package:
+  `pip install git+https://github.com/powerplace-io/power-places-scraper`
+3. *(Optional) Start up a proxy (e.g. TOR: just start the browser in the [tor bundle][tor_browser])*
+4. Run the scraper (if you want to use a proxy, make sure to specify it via `--proxy`; if you are using TOR with the default settings, you can use the `--tor` option):
   `power_places_scraper samples/berlin_mitte.geojson berlin_places.json`
 
 ## Scraping Open Street Map
